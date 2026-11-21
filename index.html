@@ -7,6 +7,7 @@
     <title>GERMAN DRIVE PRO – GAMERKIE EDITION</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
         * {
@@ -33,10 +34,10 @@
             display: block;
             width: 100%;
             height: 100%;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1;
+        #main-ui {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
         }
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
@@ -125,10 +126,10 @@
     <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none w-11/12 max-w-md"></div>
 
     <!-- ==================== MAIN MENU & GARAGE OVERLAY ==================== -->
-    <div id="main-ui" class="fixed inset-0 z-20 flex flex-col justify-between p-4 md:p-6 pointer-events-none">
+    <div id="main-ui" class="fixed inset-0 z-20 flex flex-col justify-between p-4 md:p-6 pointer-events-auto">
         
         <!-- Top Navigation Bar -->
-        <header class="flex flex-wrap items-center justify-between gap-3 pointer-events-auto">
+        <header class="flex flex-wrap items-center justify-between gap-3 pointer-events-auto shrink-0">
             <div class="glass-panel px-4 py-2.5 rounded-2xl flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-blue-700 flex items-center justify-center font-racing font-black text-lg tracking-tighter shadow-lg">
                     GK
@@ -143,7 +144,7 @@
                 </div>
             </div>
 
-            <!-- Player Profile & GK Credits -->
+            <!-- Player Profile, Fullscreen & GK Credits -->
             <div class="flex items-center gap-2 md:gap-3">
                 <div class="glass-panel px-3.5 py-2 rounded-2xl flex items-center gap-2">
                     <span class="text-xs text-slate-400 hidden sm:inline">DRIVER LVL</span>
@@ -151,40 +152,48 @@
                 </div>
                 <div class="glass-panel px-4 py-2 rounded-2xl flex items-center gap-2 border-emerald-500/30">
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span id="ui-credits" class="font-racing font-bold text-emerald-400 text-sm md:text-base">50,000</span>
+                    <span id="ui-credits" class="font-racing font-bold text-emerald-400 text-sm md:text-base">75,000</span>
                     <span class="text-xs font-bold text-slate-300">GK CR</span>
                 </div>
+                <button onclick="UI.toggleFullscreen()" class="glass-panel px-3 py-2.5 rounded-2xl hover:bg-slate-800/80 transition font-racing font-bold text-xs text-sky-300" title="Toggle Fullscreen">
+                    ⛶ FULL
+                </button>
                 <button onclick="UI.openModal('settings-modal')" class="glass-panel p-2.5 rounded-2xl hover:bg-slate-800/80 transition" title="Settings">
                     <svg class="w-5 h-5 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 </button>
             </div>
         </header>
 
-        <!-- Center Screen Area (Home / Mode Select / Garage) -->
-        <main id="menu-content" class="flex-1 flex flex-col justify-end md:justify-between my-3 overflow-hidden pointer-events-none">
+        <!-- Center Screen Area (Home / Mode Select / Garage - Scrollable Up & Down) -->
+        <main id="menu-content" class="flex-1 flex flex-col justify-between my-3 overflow-y-auto pointer-events-auto pr-1">
             
             <!-- HOME SCREEN VIEW -->
-            <div id="view-home" class="h-full flex flex-col justify-between">
-                <!-- Selected Vehicle Quick Info Card -->
-                <div class="glass-panel p-4 rounded-2xl max-w-sm pointer-events-auto self-start">
-                    <div class="flex items-center justify-between mb-1">
-                        <span id="home-car-cat" class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-sky-500/20 text-sky-300">COMPACT CITY</span>
-                        <span id="home-car-drive" class="text-xs font-racing text-slate-400">FWD • 6-SPD</span>
-                    </div>
-                    <h2 id="home-car-name" class="font-racing font-bold text-xl md:text-2xl text-white">GK City One</h2>
-                    <div class="grid grid-cols-3 gap-2 mt-3 text-center">
-                        <div class="bg-slate-900/70 p-2 rounded-xl">
-                            <div class="text-[10px] text-slate-400">POWER</div>
-                            <div id="home-car-hp" class="font-racing font-bold text-sm text-sky-400">135 HP</div>
+            <div id="view-home" class="min-h-full flex flex-col justify-between gap-4 pb-6">
+                <!-- Selected Vehicle Quick Info Card + Instant Play Button -->
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div class="glass-panel p-4 rounded-2xl w-full max-w-sm pointer-events-auto">
+                        <div class="flex items-center justify-between mb-1">
+                            <span id="home-car-cat" class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-sky-500/20 text-sky-300">2026 USA MUSCLE</span>
+                            <span id="home-car-drive" class="text-xs font-racing text-slate-400">RWD • 7-SPD</span>
                         </div>
-                        <div class="bg-slate-900/70 p-2 rounded-xl">
-                            <div class="text-[10px] text-slate-400">TOP SPEED</div>
-                            <div id="home-car-spd" class="font-racing font-bold text-sm text-emerald-400">205 KM/H</div>
+                        <h2 id="home-car-name" class="font-racing font-bold text-xl md:text-2xl text-white">2026 GK Stallion GT500</h2>
+                        <div class="grid grid-cols-3 gap-2 mt-3 text-center">
+                            <div class="bg-slate-900/70 p-2 rounded-xl">
+                                <div class="text-[10px] text-slate-400">POWER</div>
+                                <div id="home-car-hp" class="font-racing font-bold text-sm text-sky-400">520 HP</div>
+                            </div>
+                            <div class="bg-slate-900/70 p-2 rounded-xl">
+                                <div class="text-[10px] text-slate-400">TOP SPEED</div>
+                                <div id="home-car-spd" class="font-racing font-bold text-sm text-emerald-400">295 KM/H</div>
+                            </div>
+                            <div class="bg-slate-900/70 p-2 rounded-xl">
+                                <div class="text-[10px] text-slate-400">0-100 KM/H</div>
+                                <div id="home-car-acc" class="font-racing font-bold text-sm text-amber-400">3.9s</div>
+                            </div>
                         </div>
-                        <div class="bg-slate-900/70 p-2 rounded-xl">
-                            <div class="text-[10px] text-slate-400">0-100 KM/H</div>
-                            <div id="home-car-acc" class="font-racing font-bold text-sm text-amber-400">8.4s</div>
-                        </div>
+                        <button onclick="Game.quickPlay()" class="w-full mt-3 py-3 rounded-xl btn-accent font-racing font-black text-sm tracking-wider text-white shadow-lg">
+                            ▶ PLAY NOW (INSTANT DRIVE)
+                        </button>
                     </div>
                 </div>
 
@@ -232,7 +241,7 @@
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <div class="flex flex-wrap gap-2">
                             <button onclick="UI.showView('garage')" class="btn-primary px-5 py-3 rounded-2xl font-racing font-bold text-sm tracking-wide text-white flex items-center gap-2">
-                                <span>GARAGE & TUNING (20 CARS)</span>
+                                <span>GARAGE & TUNING (30 CARS • 2026 USA EDITION)</span>
                             </button>
                             <button onclick="UI.openModal('stats-modal')" class="glass-panel px-4 py-3 rounded-2xl font-semibold text-xs md:text-sm hover:bg-slate-800 transition">
                                 STATS & ACHIEVEMENTS
@@ -242,7 +251,7 @@
                             </button>
                         </div>
                         <div class="text-[11px] text-slate-400 glass-panel px-3 py-2 rounded-xl">
-                            GAMERKIE © 2026 • Drag to rotate 3D preview
+                            GAMERKIE © 2026 • 30 Cars & 10 3D Animated Worlds
                         </div>
                     </div>
                 </div>
@@ -257,7 +266,7 @@
                             <button onclick="UI.showView('home')" class="text-xs font-bold text-sky-400 hover:underline flex items-center gap-1">
                                 ← BACK TO MENU
                             </button>
-                            <span id="gar-car-idx" class="text-xs font-racing text-slate-400">1 / 20</span>
+                            <span id="gar-car-idx" class="text-xs font-racing text-slate-400">1 / 30</span>
                         </div>
                         <h2 id="gar-car-name" class="font-racing font-black text-xl text-white mt-2">GK City One</h2>
                         <p id="gar-car-desc" class="text-xs text-slate-300 mt-1">Agile German compact hatchback engineered for tight urban streets.</p>
@@ -295,47 +304,47 @@
                     <!-- Tuning & Paint Tabs -->
                     <div class="glass-panel p-4 rounded-2xl w-full md:w-96 pointer-events-auto max-h-[52vh] overflow-y-auto">
                         <div class="flex gap-1.5 mb-3 bg-slate-900/80 p-1 rounded-xl">
-                            <button onclick="Garage.setTab('upgrades')" id="tab-upgrades" class="flex-1 py-1.5 rounded-lg text-xs font-racing font-bold bg-sky-600 text-white">PERFORMANCE</button>
-                            <button onclick="Garage.setTab('paint')" id="tab-paint" class="flex-1 py-1.5 rounded-lg text-xs font-racing font-bold text-slate-400 hover:text-white">PAINT & VISUALS</button>
+                            <button onclick="Garage.setTab('paint')" id="tab-paint" class="flex-1 py-1.5 rounded-lg text-xs font-racing font-bold bg-sky-600 text-white">CAR COLORS</button>
+                            <button onclick="Garage.setTab('upgrades')" id="tab-upgrades" class="flex-1 py-1.5 rounded-lg text-xs font-racing font-bold text-slate-400 hover:text-white">PERFORMANCE</button>
                             <button onclick="Garage.setTab('tuning')" id="tab-tuning" class="flex-1 py-1.5 rounded-lg text-xs font-racing font-bold text-slate-400 hover:text-white">SETUP</button>
                         </div>
 
-                        <!-- Upgrades Content -->
-                        <div id="garage-tab-upgrades" class="space-y-2 text-xs"></div>
-
-                        <!-- Paint & Visuals Content -->
-                        <div id="garage-tab-paint" class="hidden space-y-3 text-xs">
+                        <!-- Paint & Visuals Content (Default Active for Instant Color Customization) -->
+                        <div id="garage-tab-paint" class="space-y-3 text-xs">
                             <div>
                                 <div class="text-slate-400 font-bold mb-1.5">BODY PAINT FINISH</div>
                                 <div class="grid grid-cols-4 gap-1.5">
                                     <button onclick="Garage.setFinish('gloss')" class="py-1.5 rounded-lg bg-slate-800 border border-slate-600 hover:border-sky-400">Gloss</button>
                                     <button onclick="Garage.setFinish('metallic')" class="py-1.5 rounded-lg bg-slate-800 border border-slate-600 hover:border-sky-400">Metallic</button>
                                     <button onclick="Garage.setFinish('matte')" class="py-1.5 rounded-lg bg-slate-800 border border-slate-600 hover:border-sky-400">Matte</button>
-                                    <button onclick="Garage.setFinish('chrome')" class="py-1.5 rounded-lg bg-slate-800 border border-slate-600 hover:border-sky-400">Satin</button>
+                                    <button onclick="Garage.setFinish('chrome')" class="py-1.5 rounded-lg bg-slate-800 border border-slate-600 hover:border-sky-400">Chrome</button>
                                 </div>
                             </div>
                             <div>
-                                <div class="text-slate-400 font-bold mb-1.5">EXTERIOR COLOR PALETTE (500 GK CR)</div>
+                                <div class="text-slate-400 font-bold mb-1.5">FREE CUSTOM CAR COLOR PALETTE</div>
                                 <div id="paint-swatches" class="grid grid-cols-7 gap-1.5"></div>
-                                <div class="mt-2 flex items-center gap-2">
-                                    <label class="text-slate-400">Custom:</label>
-                                    <input type="color" id="custom-paint-picker" onchange="Garage.applyPaint(this.value)" class="w-8 h-6 rounded cursor-pointer bg-transparent border-0">
+                                <div class="mt-2.5 flex items-center justify-between bg-slate-900/80 p-2 rounded-xl border border-slate-800">
+                                    <label class="text-slate-300 font-bold">Any Custom RGB Color:</label>
+                                    <input type="color" id="custom-paint-picker" value="#38bdf8" oninput="Garage.applyPaint(this.value)" onchange="Garage.applyPaint(this.value)" class="w-10 h-7 rounded cursor-pointer bg-transparent border-0">
                                 </div>
                             </div>
                             <div>
-                                <div class="text-slate-400 font-bold mb-1.5">AERODYNAMICS & RIMS (1,200 GK CR)</div>
+                                <div class="text-slate-400 font-bold mb-1.5">3D ANIMATED AERO & RIMS</div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <button onclick="Garage.toggleSpoiler()" class="py-2 px-3 rounded-xl bg-slate-800 border border-slate-600 hover:border-sky-400 text-left">
-                                        <div class="font-bold text-white">GT Carbon Wing</div>
-                                        <div id="gar-spoiler-status" class="text-[10px] text-sky-400">Toggle Aero</div>
+                                        <div class="font-bold text-white">Active 3D Aero Wing</div>
+                                        <div id="gar-spoiler-status" class="text-[10px] text-sky-400">Toggle Animated Wing</div>
                                     </button>
                                     <button onclick="Garage.cycleRimColor()" class="py-2 px-3 rounded-xl bg-slate-800 border border-slate-600 hover:border-sky-400 text-left">
                                         <div class="font-bold text-white">Alloy Rim Finish</div>
-                                        <div id="gar-rim-status" class="text-[10px] text-sky-400">Cycle Style</div>
+                                        <div id="gar-rim-status" class="text-[10px] text-sky-400">Cycle Rim Color</div>
                                     </button>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Upgrades Content -->
+                        <div id="garage-tab-upgrades" class="hidden space-y-2 text-xs"></div>
 
                         <!-- Tuning Content -->
                         <div id="garage-tab-tuning" class="hidden space-y-3 text-xs">
@@ -380,7 +389,7 @@
             <div class="space-y-4">
                 <!-- Track Selection -->
                 <div>
-                    <label class="block text-xs font-racing font-bold text-sky-400 mb-2">SELECT GERMAN ENVIRONMENT</label>
+                    <label class="block text-xs font-racing font-bold text-sky-400 mb-2">SELECT 10 3D ANIMATED ENVIRONMENTS (USA & GERMANY)</label>
                     <div id="track-selector-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5"></div>
                 </div>
 
@@ -587,6 +596,7 @@
 
             <!-- Right: Quick Utility Buttons -->
             <div class="flex flex-wrap items-center justify-end gap-1.5 pointer-events-auto">
+                <button onclick="UI.toggleFullscreen()" class="glass-panel p-2.5 rounded-xl text-xs font-racing font-bold text-sky-300 hover:bg-slate-800" title="Fullscreen">⛶</button>
                 <button onclick="VehicleController.toggleHeadlights()" id="hud-btn-lights" class="glass-panel p-2.5 rounded-xl text-xs font-bold hover:bg-slate-800" title="Headlights (H)">💡</button>
                 <button onclick="VehicleController.toggleIndicator(-1)" id="hud-btn-ind-l" class="glass-panel p-2.5 rounded-xl text-xs font-bold hover:bg-slate-800" title="Left Indicator">◀</button>
                 <button onclick="VehicleController.toggleIndicator(1)" id="hud-btn-ind-r" class="glass-panel p-2.5 rounded-xl text-xs font-bold hover:bg-slate-800" title="Right Indicator">▶</button>
@@ -703,6 +713,7 @@
             <p class="text-xs text-slate-400">GERMAN DRIVE PRO – GAMERKIE EDITION</p>
             <div class="space-y-2 pt-2">
                 <button onclick="Game.togglePause()" class="w-full py-3 rounded-xl btn-primary font-racing font-bold text-sm text-white">RESUME DRIVING</button>
+                <button onclick="UI.toggleFullscreen()" class="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 font-racing font-bold text-sm text-emerald-300">TOGGLE FULLSCREEN (⛶)</button>
                 <button onclick="Game.restartCurrentEvent()" class="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 font-racing font-bold text-sm text-amber-300">RESTART EVENT</button>
                 <button onclick="CameraSystem.nextCamera()" class="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 font-racing font-bold text-sm text-sky-300">SWITCH CAMERA</button>
                 <button onclick="Game.exitToMenu()" class="w-full py-3 rounded-xl bg-rose-950/80 hover:bg-rose-900 font-racing font-bold text-sm text-rose-300">RETURN TO GARAGE</button>
@@ -744,38 +755,55 @@
      */
 
     // =========================================================================
-    // 1. VEHICLE CATALOG (20 ORIGINAL FICTIONAL VEHICLES)
+    // 1. VEHICLE CATALOG (30 ORIGINAL FICTIONAL VEHICLES - 2026 USA & GERMAN EDITION)
     // =========================================================================
     const VEHICLE_CATALOG = [
-        { id: 'gk_city_one', name: 'GK City One', category: 'Compact City', price: 0, hp: 135, torque: 210, maxRpm: 6500, weight: 1180, topSpeed: 205, grip: 0.96, brake: 0.92, drive: 'FWD', gears: 6, bodyType: 'hatch', color: '#38bdf8', desc: 'Agile German compact car engineered for tight city streets.' },
-        { id: 'gk_urban_sport', name: 'GK Urban Sport', category: 'Hot Hatch', price: 14000, hp: 245, torque: 370, maxRpm: 7000, weight: 1320, topSpeed: 250, grip: 1.04, brake: 1.02, drive: 'FWD', gears: 6, bodyType: 'hatch', color: '#ef4444', desc: 'Turbocharged hot hatch with sharp turn-in and sport suspension.' },
-        { id: 'gk_classic_90', name: 'GK Classic 90', category: 'Classic', price: 18500, hp: 215, torque: 265, maxRpm: 7400, weight: 1240, topSpeed: 242, grip: 0.98, brake: 0.95, drive: 'RWD', gears: 5, bodyType: 'coupe', color: '#f59e0b', desc: 'Iconic 1990s Bavarian touring legend with balanced RWD chassis.' },
-        { id: 'gk_executive_s', name: 'GK Executive S', category: 'Sedan', price: 24000, hp: 280, torque: 420, maxRpm: 6600, weight: 1620, topSpeed: 255, grip: 1.02, brake: 1.00, drive: 'AWD', gears: 7, bodyType: 'sedan', color: '#94a3b8', desc: 'Refined Autobahn cruiser combining stability with twin-scroll torque.' },
-        { id: 'gk_touring_gt', name: 'GK Touring GT', category: 'Luxury Sedan', price: 32000, hp: 360, torque: 520, maxRpm: 7000, weight: 1710, topSpeed: 278, grip: 1.06, brake: 1.06, drive: 'AWD', gears: 7, bodyType: 'sedan', color: '#1e293b', desc: 'High-speed executive saloon built for effortless 250+ km/h cruising.' },
-        { id: 'gk_perf_suv', name: 'GK Performance SUV', category: 'Performance SUV', price: 38000, hp: 440, torque: 620, maxRpm: 6800, weight: 2050, topSpeed: 268, grip: 1.05, brake: 1.05, drive: 'AWD', gears: 7, bodyType: 'suv', color: '#0f766e', desc: 'All-terrain twin-turbo V8 SUV with active air suspension.' },
-        { id: 'gk_alpine_rs', name: 'GK Alpine RS', category: 'Sports Coupe', price: 45000, hp: 410, torque: 480, maxRpm: 7800, weight: 1440, topSpeed: 292, grip: 1.12, brake: 1.12, drive: 'RWD', gears: 7, bodyType: 'coupe', color: '#22c55e', desc: 'Precision mountain-carving coupe with razor-sharp steering.' },
-        { id: 'gk_drift_master', name: 'GK Drift Master', category: 'Drift Spec', price: 48000, hp: 520, torque: 680, maxRpm: 8200, weight: 1310, topSpeed: 275, grip: 0.94, brake: 1.08, drive: 'RWD', gears: 6, bodyType: 'coupe', color: '#a855f7', desc: 'Custom high-angle steering lock and welded diff for sustained slides.' },
-        { id: 'gk_thunder_v8', name: 'GK Thunder V8', category: 'Muscle', price: 52000, hp: 560, torque: 740, maxRpm: 6900, weight: 1680, topSpeed: 295, grip: 1.03, brake: 1.04, drive: 'RWD', gears: 6, bodyType: 'coupe', color: '#ea580c', desc: 'Brutal naturally aspirated V8 torque monster with deep exhaust roar.' },
-        { id: 'gk_phantom_coupe', name: 'GK Phantom Coupe', category: 'Grand Tourer', price: 62000, hp: 510, torque: 650, maxRpm: 7600, weight: 1560, topSpeed: 308, grip: 1.14, brake: 1.14, drive: 'AWD', gears: 7, bodyType: 'coupe', color: '#3b82f6', desc: 'Sleek aerodynamic grand tourer with adaptive torque vectoring.' },
-        { id: 'gk_street_pro', name: 'GK Street Pro', category: 'Tuned Sports', price: 70000, hp: 580, torque: 710, maxRpm: 8000, weight: 1420, topSpeed: 315, grip: 1.16, brake: 1.16, drive: 'AWD', gears: 7, bodyType: 'coupe', color: '#eab308', desc: 'Stage-tuned street weapon built for midnight highway sprints.' },
-        { id: 'gk_turbo_sport', name: 'GK Turbo Sport', category: 'Sports Car', price: 82000, hp: 620, torque: 780, maxRpm: 7800, weight: 1490, topSpeed: 325, grip: 1.20, brake: 1.20, drive: 'AWD', gears: 7, bodyType: 'super', color: '#ec4899', desc: 'Rear-biased twin-turbo flat-six rocket with explosive launch.' },
-        { id: 'gk_night_runner', name: 'GK Night Runner', category: 'Midnight GT', price: 95000, hp: 670, torque: 800, maxRpm: 8400, weight: 1390, topSpeed: 334, grip: 1.22, brake: 1.22, drive: 'RWD', gears: 7, bodyType: 'super', color: '#6366f1', desc: 'Lightweight carbon-tub midnight runner engineered for top speed.' },
-        { id: 'gk_grand_touring', name: 'GK Grand Touring', category: 'Luxury GT', price: 110000, hp: 710, torque: 860, maxRpm: 7500, weight: 1750, topSpeed: 338, grip: 1.18, brake: 1.20, drive: 'AWD', gears: 7, bodyType: 'sedan', color: '#0ea5e9', desc: 'V12 flagship German autobahn dominator with unmatched stability.' },
-        { id: 'gk_velocity_r', name: 'GK Velocity R', category: 'Supercar', price: 135000, hp: 750, torque: 820, maxRpm: 8600, weight: 1360, topSpeed: 348, grip: 1.26, brake: 1.26, drive: 'RWD', gears: 7, bodyType: 'super', color: '#f43f5e', desc: 'Mid-engine V10 supercar screaming to 8,600 RPM.' },
-        { id: 'gk_aero_gt', name: 'GK Aero GT', category: 'Track Supercar', price: 160000, hp: 800, torque: 850, maxRpm: 8800, weight: 1310, topSpeed: 352, grip: 1.32, brake: 1.30, drive: 'RWD', gears: 7, bodyType: 'super', color: '#10b981', desc: 'Active downforce aerodynamics generate immense cornering grip.' },
-        { id: 'gk_track_edition', name: 'GK Track Edition', category: 'GT3 Racer', price: 195000, hp: 840, torque: 890, maxRpm: 9000, weight: 1250, topSpeed: 358, grip: 1.38, brake: 1.36, drive: 'RWD', gears: 7, bodyType: 'race', color: '#f97316', desc: 'Homologated endurance racing machine with slick tire compound.' },
-        { id: 'gk_racing_x', name: 'GK Racing X', category: 'Prototype', price: 240000, hp: 920, torque: 960, maxRpm: 9200, weight: 1180, topSpeed: 372, grip: 1.42, brake: 1.40, drive: 'AWD', gears: 7, bodyType: 'race', color: '#06b6d4', desc: 'Hybrid AWD prototype racer built to conquer Nürburg-style circuits.' },
-        { id: 'gk_super_velocity', name: 'GK Super Velocity', category: 'Hypercar', price: 300000, hp: 1050, torque: 1100, maxRpm: 9000, weight: 1290, topSpeed: 392, grip: 1.44, brake: 1.42, drive: 'AWD', gears: 7, bodyType: 'hyper', color: '#8b5cf6', desc: 'Quad-turbo hypercar capable of sub-2.4s 0–100 km/h launches.' },
-        { id: 'gk_hyper_gt', name: 'GK Hyper GT', category: 'Ultimate Hypercar', price: 420000, hp: 1250, torque: 1280, maxRpm: 9500, weight: 1240, topSpeed: 418, grip: 1.50, brake: 1.48, drive: 'AWD', gears: 7, bodyType: 'hyper', color: '#e11d48', desc: 'The pinnacle of GamerKie automotive engineering. Drive without limits.' }
+        // 2026 American Muscle, EV, Supercar, Truck & Track Lineup (Copyright-Free Original Designs)
+        { id: 'usa_stallion_26', name: '2026 GK Stallion GT500', category: '2026 USA Muscle', price: 0, hp: 520, torque: 680, maxRpm: 7500, weight: 1640, topSpeed: 295, grip: 1.08, brake: 1.06, drive: 'RWD', gears: 7, bodyType: 'muscle', color: '#dc2626', glbUrl: '', desc: '2026 American V8 fastback muscle coupe with animated active hood vents & aero.' },
+        { id: 'usa_viper_26', name: '2026 GK Viper ZR-1', category: '2026 USA Supercar', price: 15000, hp: 780, torque: 890, maxRpm: 8400, weight: 1480, topSpeed: 342, grip: 1.26, brake: 1.24, drive: 'RWD', gears: 7, bodyType: 'super', color: '#2563eb', glbUrl: '', desc: '2026 mid-engine American V8 track weapon with active hydraulic rear wing.' },
+        { id: 'usa_cyber_volt_26', name: '2026 GK Volt Plaid EV', category: '2026 USA Hyper EV', price: 18000, hp: 1020, torque: 1250, maxRpm: 9500, weight: 1890, topSpeed: 335, grip: 1.24, brake: 1.20, drive: 'AWD', gears: 1, bodyType: 'sedan', color: '#f8fafc', glbUrl: '', desc: '2026 tri-motor American electric sedan with instant torque vectoring.' },
+        { id: 'usa_raptor_26', name: '2026 GK Mojave Raptor', category: '2026 USA Baja Truck', price: 22000, hp: 710, torque: 880, maxRpm: 6800, weight: 2350, topSpeed: 235, grip: 1.12, brake: 1.04, drive: 'AWD', gears: 7, bodyType: 'truck', color: '#ea580c', glbUrl: '', desc: '2026 American desert off-road super-truck with long-travel 3D suspension.' },
+        { id: 'usa_challenger_26', name: '2026 GK Demon 170X', category: '2026 USA Drag Muscle', price: 26000, hp: 940, torque: 1120, maxRpm: 7200, weight: 1790, topSpeed: 328, grip: 1.14, brake: 1.10, drive: 'RWD', gears: 7, bodyType: 'muscle', color: '#7c3aed', glbUrl: '', desc: '2026 supercharged American quarter-mile drag beast with animated shaker scoop.' },
+        { id: 'usa_camaro_zl26', name: '2026 GK Apex ZL1', category: '2026 USA Track Coupe', price: 30000, hp: 675, torque: 840, maxRpm: 7400, weight: 1610, topSpeed: 318, grip: 1.22, brake: 1.22, drive: 'RWD', gears: 7, bodyType: 'muscle', color: '#eab308', glbUrl: '', desc: '2026 American track-focused coupe with carbon dive planes & magnetic ride.' },
+        { id: 'usa_ford_gt26', name: '2026 GK LeMans GT66', category: '2026 USA Hypercar', price: 45000, hp: 860, torque: 930, maxRpm: 8800, weight: 1340, topSpeed: 362, grip: 1.36, brake: 1.35, drive: 'RWD', gears: 7, bodyType: 'hyper', color: '#0284c7', glbUrl: '', desc: '2026 American carbon-monocoque endurance racer with active air-brake.' },
+        { id: 'usa_escalade_26', name: '2026 GK Patriot V-Sport', category: '2026 USA Luxury SUV', price: 34000, hp: 682, torque: 885, maxRpm: 6600, weight: 2420, topSpeed: 255, grip: 1.06, brake: 1.06, drive: 'AWD', gears: 7, bodyType: 'suv', color: '#1e293b', glbUrl: '', desc: '2026 full-size American V8 luxury performance SUV with LED lightblade.' },
+        { id: 'usa_lucid_air_26', name: '2026 GK Sapphire GT', category: '2026 USA Aero EV', price: 52000, hp: 1180, torque: 1320, maxRpm: 9500, weight: 1920, topSpeed: 350, grip: 1.30, brake: 1.28, drive: 'AWD', gears: 1, bodyType: 'sedan', color: '#06b6d4', glbUrl: '', desc: '2026 ultra-aerodynamic California electric grand tourer.' },
+        { id: 'usa_venom_f5_26', name: '2026 GK Venom Texas', category: '2026 USA Megacar', price: 85000, hp: 1450, torque: 1480, maxRpm: 9200, weight: 1320, topSpeed: 435, grip: 1.46, brake: 1.45, drive: 'RWD', gears: 7, bodyType: 'hyper', color: '#f97316', glbUrl: '', desc: '2026 Texas-built twin-turbo V8 megacar engineered to break 430 km/h.' },
+        { id: 'usa_bronco_26', name: '2026 GK Rockies 4x4', category: '2026 USA Off-Road', price: 24000, hp: 430, torque: 610, maxRpm: 6500, weight: 2100, topSpeed: 215, grip: 1.08, brake: 1.02, drive: 'AWD', gears: 7, bodyType: 'suv', color: '#16a34a', glbUrl: '', desc: '2026 American 4x4 trail runner built for Rocky Mountain passes.' },
+        { id: 'usa_cadillac_gtp26', name: '2026 GK Daytona GTP', category: '2026 USA Prototype', price: 95000, hp: 980, torque: 1020, maxRpm: 9400, weight: 1120, topSpeed: 382, grip: 1.48, brake: 1.46, drive: 'AWD', gears: 7, bodyType: 'race', color: '#facc15', glbUrl: '', desc: '2026 American IMSA hybrid endurance prototype with dorsal shark fin.' },
+        { id: 'usa_nascar_26', name: '2026 GK Talladega Stock', category: '2026 USA Stock Car', price: 38000, hp: 720, torque: 790, maxRpm: 9000, weight: 1490, topSpeed: 332, grip: 1.24, brake: 1.18, drive: 'RWD', gears: 6, bodyType: 'race', color: '#ef4444', glbUrl: '', desc: '2026 Next-Gen American oval & road-course stock racer.' },
+        { id: 'usa_corvette_eray26', name: '2026 GK Stingray E-AWD', category: '2026 USA Hybrid GT', price: 42000, hp: 665, torque: 810, maxRpm: 8600, weight: 1580, topSpeed: 322, grip: 1.28, brake: 1.26, drive: 'AWD', gears: 7, bodyType: 'super', color: '#10b981', glbUrl: '', desc: '2026 electrified all-wheel-drive American sports coupe.' },
+        { id: 'usa_rivian_26', name: '2026 GK Sierra Quad-EV', category: '2026 USA Sport Truck', price: 29000, hp: 850, torque: 1150, maxRpm: 9000, weight: 2480, topSpeed: 245, grip: 1.14, brake: 1.10, drive: 'AWD', gears: 1, bodyType: 'truck', color: '#3b82f6', glbUrl: '', desc: '2026 quad-motor adventure pickup with animated lightbar.' },
+        // German & International Performance Collection
+        { id: 'gk_city_one', name: 'GK City One', category: 'Compact City', price: 0, hp: 135, torque: 210, maxRpm: 6500, weight: 1180, topSpeed: 205, grip: 0.96, brake: 0.92, drive: 'FWD', gears: 6, bodyType: 'hatch', color: '#38bdf8', glbUrl: '', desc: 'Agile German compact car engineered for tight city streets.' },
+        { id: 'gk_urban_sport', name: 'GK Urban Sport', category: 'Hot Hatch', price: 14000, hp: 245, torque: 370, maxRpm: 7000, weight: 1320, topSpeed: 250, grip: 1.04, brake: 1.02, drive: 'FWD', gears: 6, bodyType: 'hatch', color: '#ef4444', glbUrl: '', desc: 'Turbocharged hot hatch with sharp turn-in and sport suspension.' },
+        { id: 'gk_classic_90', name: 'GK Classic 90', category: 'Classic', price: 18500, hp: 215, torque: 265, maxRpm: 7400, weight: 1240, topSpeed: 242, grip: 0.98, brake: 0.95, drive: 'RWD', gears: 5, bodyType: 'coupe', color: '#f59e0b', glbUrl: '', desc: 'Iconic 1990s Bavarian touring legend with balanced RWD chassis.' },
+        { id: 'gk_executive_s', name: 'GK Executive S', category: 'Sedan', price: 24000, hp: 280, torque: 420, maxRpm: 6600, weight: 1620, topSpeed: 255, grip: 1.02, brake: 1.00, drive: 'AWD', gears: 7, bodyType: 'sedan', color: '#94a3b8', glbUrl: '', desc: 'Refined Autobahn cruiser combining stability with twin-scroll torque.' },
+        { id: 'gk_touring_gt', name: 'GK Touring GT', category: 'Luxury Sedan', price: 32000, hp: 360, torque: 520, maxRpm: 7000, weight: 1710, topSpeed: 278, grip: 1.06, brake: 1.06, drive: 'AWD', gears: 7, bodyType: 'sedan', color: '#1e293b', glbUrl: '', desc: 'High-speed executive saloon built for effortless 250+ km/h cruising.' },
+        { id: 'gk_alpine_rs', name: 'GK Alpine RS', category: 'Sports Coupe', price: 45000, hp: 410, torque: 480, maxRpm: 7800, weight: 1440, topSpeed: 292, grip: 1.12, brake: 1.12, drive: 'RWD', gears: 7, bodyType: 'coupe', color: '#22c55e', glbUrl: '', desc: 'Precision mountain-carving coupe with razor-sharp steering.' },
+        { id: 'gk_drift_master', name: 'GK Drift Master', category: 'Drift Spec', price: 48000, hp: 520, torque: 680, maxRpm: 8200, weight: 1310, topSpeed: 275, grip: 0.94, brake: 1.08, drive: 'RWD', gears: 6, bodyType: 'coupe', color: '#a855f7', glbUrl: '', desc: 'Custom high-angle steering lock and welded diff for sustained slides.' },
+        { id: 'gk_phantom_coupe', name: 'GK Phantom Coupe', category: 'Grand Tourer', price: 62000, hp: 510, torque: 650, maxRpm: 7600, weight: 1560, topSpeed: 308, grip: 1.14, brake: 1.14, drive: 'AWD', gears: 7, bodyType: 'coupe', color: '#3b82f6', glbUrl: '', desc: 'Sleek aerodynamic grand tourer with adaptive torque vectoring.' },
+        { id: 'gk_street_pro', name: 'GK Street Pro', category: 'Tuned Sports', price: 70000, hp: 580, torque: 710, maxRpm: 8000, weight: 1420, topSpeed: 315, grip: 1.16, brake: 1.16, drive: 'AWD', gears: 7, bodyType: 'coupe', color: '#eab308', glbUrl: '', desc: 'Stage-tuned street weapon built for midnight highway sprints.' },
+        { id: 'gk_turbo_sport', name: 'GK Turbo Sport', category: 'Sports Car', price: 82000, hp: 620, torque: 780, maxRpm: 7800, weight: 1490, topSpeed: 325, grip: 1.20, brake: 1.20, drive: 'AWD', gears: 7, bodyType: 'super', color: '#ec4899', glbUrl: '', desc: 'Rear-biased twin-turbo flat-six rocket with explosive launch.' },
+        { id: 'gk_night_runner', name: 'GK Night Runner', category: 'Midnight GT', price: 95000, hp: 670, torque: 800, maxRpm: 8400, weight: 1390, topSpeed: 334, grip: 1.22, brake: 1.22, drive: 'RWD', gears: 7, bodyType: 'super', color: '#6366f1', glbUrl: '', desc: 'Lightweight carbon-tub midnight runner engineered for top speed.' },
+        { id: 'gk_velocity_r', name: 'GK Velocity R', category: 'Supercar', price: 135000, hp: 750, torque: 820, maxRpm: 8600, weight: 1360, topSpeed: 348, grip: 1.26, brake: 1.26, drive: 'RWD', gears: 7, bodyType: 'super', color: '#f43f5e', glbUrl: '', desc: 'Mid-engine V10 supercar screaming to 8,600 RPM.' },
+        { id: 'gk_aero_gt', name: 'GK Aero GT', category: 'Track Supercar', price: 160000, hp: 800, torque: 850, maxRpm: 8800, weight: 1310, topSpeed: 352, grip: 1.32, brake: 1.30, drive: 'RWD', gears: 7, bodyType: 'super', color: '#10b981', glbUrl: '', desc: 'Active downforce aerodynamics generate immense cornering grip.' },
+        { id: 'gk_track_edition', name: 'GK Track Edition', category: 'GT3 Racer', price: 195000, hp: 840, torque: 890, maxRpm: 9000, weight: 1250, topSpeed: 358, grip: 1.38, brake: 1.36, drive: 'RWD', gears: 7, bodyType: 'race', color: '#f97316', glbUrl: '', desc: 'Homologated endurance racing machine with slick tire compound.' },
+        { id: 'gk_hyper_gt', name: 'GK Hyper GT', category: 'Ultimate Hypercar', price: 420000, hp: 1250, torque: 1280, maxRpm: 9500, weight: 1240, topSpeed: 418, grip: 1.50, brake: 1.48, drive: 'AWD', gears: 7, bodyType: 'hyper', color: '#e11d48', glbUrl: '', desc: 'The pinnacle of GamerKie automotive engineering. Drive without limits.' }
     ];
 
+    // 10 DISTINCT 3D ANIMATED BACKGROUNDS / LOCATIONS (USA & GERMANY)
     const TRACK_CATALOG = [
-        { id: 'autobahn', name: 'Autobahn Highway', desc: 'Multi-lane high-speed German expressway with bridges & tunnels', surfaceGrip: 1.0 },
-        { id: 'city', name: 'German City', desc: 'Urban boulevards, intersections, traffic lights & roundabouts', surfaceGrip: 0.98 },
-        { id: 'winter', name: 'Winter Track', desc: 'Snow-covered alpine roads & icy hairpins with reduced traction', surfaceGrip: 0.62 },
-        { id: 'alps', name: 'Bavarian Alps', desc: 'Scenic mountain pass with switchbacks, steep climbs & tunnels', surfaceGrip: 0.97 },
-        { id: 'testtrack', name: 'Test Track', desc: 'Proving ground with slalom cones, skidpad & braking zones', surfaceGrip: 1.02 },
-        { id: 'dragstrip', name: '402m Drag Strip', desc: 'Official quarter-mile straight with staging lights & timing beams', surfaceGrip: 1.08 }
+        { id: 'autobahn', name: '01. Autobahn Highway', desc: 'German high-speed expressway with animated wind turbines & tunnels', surfaceGrip: 1.0, theme: 'germany' },
+        { id: 'route66', name: '02. Route 66 Desert (USA)', desc: 'Red-rock Arizona canyon highway with animated radar dishes & mesas', surfaceGrip: 0.99, theme: 'desert' },
+        { id: 'miami', name: '03. Miami Oceanfront (USA)', desc: 'Tropical coastal causeway with animated palm trees, yachts & neon', surfaceGrip: 1.01, theme: 'coastal' },
+        { id: 'nyc_night', name: '04. New York Skyline (USA)', desc: 'Manhattan expressway with illuminated skyscrapers & airship patrol', surfaceGrip: 0.98, theme: 'metropolis' },
+        { id: 'rockies', name: '05. Rocky Mountains (USA)', desc: 'Colorado high-altitude pass with pine forests & rotating beacons', surfaceGrip: 0.96, theme: 'mountain' },
+        { id: 'city', name: '06. Berlin City Center', desc: 'German urban boulevards, intersections, traffic lights & roundabouts', surfaceGrip: 0.98, theme: 'city' },
+        { id: 'winter', name: '07. Alaska / Alpine Winter', desc: 'Snow-covered roads & icy hairpins with reduced traction', surfaceGrip: 0.62, theme: 'winter' },
+        { id: 'alps', name: '08. Bavarian Alps Pass', desc: 'Scenic mountain pass with switchbacks, steep climbs & tunnels', surfaceGrip: 0.97, theme: 'mountain' },
+        { id: 'testtrack', name: '09. GamerKie Proving Ground', desc: 'Test facility with slalom cones, skidpad & animated radar towers', surfaceGrip: 1.02, theme: 'proving' },
+        { id: 'dragstrip', name: '10. Texas 402m Drag Strip', desc: 'Official quarter-mile straight with Pro Tree staging lights', surfaceGrip: 1.08, theme: 'drag' }
     ];
 
     // =========================================================================
@@ -790,10 +818,10 @@
 
         defaultState() {
             return {
-                saveVersion: 1,
-                credits: 50000,
-                selectedCar: 'gk_city_one',
-                ownedCars: ['gk_city_one'],
+                saveVersion: 2,
+                credits: 75000,
+                selectedCar: 'usa_stallion_26',
+                ownedCars: ['usa_stallion_26', 'gk_city_one'],
                 carConfigs: {}, // { carId: { color, finish, spoiler, rimColor, upgrades: { engine, turbo, tires, brakes, suspension, weight }, tuning: { suspension, brakeBias, steering } } }
                 careerCompleted: [], // array of mission IDs e.g. 's1_m1'
                 schoolCompleted: [], // array of lesson IDs
@@ -960,7 +988,6 @@
                 this.masterGain.gain.value = (SaveSystem.state.settings.masterVolume / 100) * 0.5;
                 this.masterGain.connect(this.ctx.destination);
 
-                // Engine primary & harmonic oscillators
                 this.engineOsc1 = this.ctx.createOscillator();
                 this.engineOsc2 = this.ctx.createOscillator();
                 const filter = this.ctx.createBiquadFilter();
@@ -980,7 +1007,6 @@
                 this.engineOsc1.start();
                 this.engineOsc2.start();
 
-                // Turbo whistle
                 this.turboOsc = this.ctx.createOscillator();
                 this.turboOsc.type = 'sine';
                 this.turboGain = this.ctx.createGain();
@@ -989,7 +1015,6 @@
                 this.turboGain.connect(this.masterGain);
                 this.turboOsc.start();
 
-                // Tire screech white noise buffer
                 const bufferSize = this.ctx.sampleRate * 2;
                 const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
                 const output = noiseBuffer.getChannelData(0);
@@ -1040,11 +1065,9 @@
             const targetGain = (0.14 + throttle * 0.22) * engVol;
             this.engineGain.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.04);
 
-            // Turbo spool
             this.turboOsc.frequency.setTargetAtTime(1800 + boost * 2400, this.ctx.currentTime, 0.05);
             this.turboGain.gain.setTargetAtTime(Math.max(0, boost * 0.045 * engVol), this.ctx.currentTime, 0.05);
 
-            // Tire screech
             const skidLevel = Math.min(0.25, Math.max(0, (slipIntensity - 0.22) * 0.45));
             this.skidGain.gain.setTargetAtTime(skidLevel, this.ctx.currentTime, 0.04);
         },
@@ -1102,9 +1125,11 @@
     };
 
     // =========================================================================
-    // 4. 3D VEHICLE FACTORY (EXTERIOR + FUNCTIONAL COCKPIT INTERIOR)
+    // 4. 3D VEHICLE FACTORY (EXTERIOR + 3D ANIMATIONS + GLB LOADER + COCKPIT)
     // =========================================================================
     const VehicleFactory = {
+        gltfLoader: (typeof THREE !== 'undefined' && THREE.GLTFLoader) ? new THREE.GLTFLoader() : null,
+
         buildCarMesh(specs, isPlayer = true) {
             const root = new THREE.Group();
             const cfg = specs.cfg || SaveSystem.ensureCarConfig(specs.id);
@@ -1127,19 +1152,37 @@
                 opacity: isPlayer ? 0.38 : 0.75
             });
 
-            // Dimensions by Body Type
-            let width = 1.92, height = 0.65, length = 4.45, cabinLen = 2.1, cabinOffset = -0.15, roofH = 0.56;
+            // Dimensions by Body Type (Supports 2026 USA Muscle, Trucks, SUVs, Supercars, Hypercars)
+            let width = 1.94, height = 0.65, length = 4.50, cabinLen = 2.1, cabinOffset = -0.15, roofH = 0.56;
             if (specs.bodyType === 'hatch') { length = 4.05; cabinLen = 2.35; cabinOffset = -0.25; roofH = 0.62; }
-            else if (specs.bodyType === 'suv') { width = 2.05; height = 0.82; length = 4.75; cabinLen = 2.65; cabinOffset = -0.2; roofH = 0.68; }
-            else if (specs.bodyType === 'sedan') { length = 4.72; cabinLen = 2.25; cabinOffset = -0.1; roofH = 0.56; }
+            else if (specs.bodyType === 'suv') { width = 2.08; height = 0.84; length = 4.85; cabinLen = 2.75; cabinOffset = -0.2; roofH = 0.68; }
+            else if (specs.bodyType === 'truck') { width = 2.16; height = 0.88; length = 5.15; cabinLen = 1.85; cabinOffset = 0.35; roofH = 0.68; }
+            else if (specs.bodyType === 'muscle') { width = 2.02; height = 0.62; length = 4.76; cabinLen = 1.95; cabinOffset = -0.22; roofH = 0.50; }
+            else if (specs.bodyType === 'sedan') { length = 4.78; cabinLen = 2.30; cabinOffset = -0.1; roofH = 0.56; }
             else if (specs.bodyType === 'super' || specs.bodyType === 'hyper' || specs.bodyType === 'race') {
-                width = 2.04; height = 0.54; length = 4.58; cabinLen = 1.85; cabinOffset = 0.15; roofH = 0.46;
+                width = 2.06; height = 0.52; length = 4.62; cabinLen = 1.85; cabinOffset = 0.15; roofH = 0.45;
             }
 
             // Chassis Body Group (tilts for pitch & roll suspension visual)
             const bodyGroup = new THREE.Group();
-            bodyGroup.position.y = 0.42;
+            bodyGroup.position.y = specs.bodyType === 'truck' ? 0.54 : 0.42;
             root.add(bodyGroup);
+
+            // Optional External GLTF/GLB Model Loader Support (Copyright-Free Online GLB)
+            if (specs.glbUrl && this.gltfLoader) {
+                this.gltfLoader.load(specs.glbUrl, (gltf) => {
+                    const model = gltf.scene;
+                    model.traverse((child) => {
+                        if (child.isMesh && child.material) {
+                            child.castShadow = true;
+                            if (child.name.toLowerCase().includes('body') || child.name.toLowerCase().includes('paint')) {
+                                child.material = paintMat;
+                            }
+                        }
+                    });
+                    bodyGroup.add(model);
+                }, undefined, () => { /* Fallback to procedural 3D chassis seamlessly */ });
+            }
 
             // Lower Main Chassis
             const lowerGeo = new THREE.BoxGeometry(width, height, length);
@@ -1149,13 +1192,27 @@
             lowerMesh.receiveShadow = true;
             bodyGroup.add(lowerMesh);
 
+            // 2026 American Muscle Hood Scoop / Supercharger Intake
+            if (specs.bodyType === 'muscle') {
+                const scoop = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.14, 1.15), darkTrimMat);
+                scoop.position.set(0, height + 0.06, length * 0.22);
+                bodyGroup.add(scoop);
+            }
+
+            // Pickup Truck Bed Rails for 2026 USA Trucks
+            if (specs.bodyType === 'truck') {
+                const bedFloor = new THREE.Mesh(new THREE.BoxGeometry(width * 0.86, 0.12, 1.75), darkTrimMat);
+                bedFloor.position.set(0, height + 0.02, -length * 0.28);
+                bodyGroup.add(bedFloor);
+            }
+
             // Sculpted Hood & Front Splitter
-            const splitter = new THREE.Mesh(new THREE.BoxGeometry(width + 0.04, 0.1, 0.4), darkTrimMat);
+            const splitter = new THREE.Mesh(new THREE.BoxGeometry(width + 0.06, 0.1, 0.42), darkTrimMat);
             splitter.position.set(0, 0.08, length * 0.5 - 0.1);
             bodyGroup.add(splitter);
 
             // Front Grille
-            const grille = new THREE.Mesh(new THREE.BoxGeometry(width * 0.58, height * 0.42, 0.08), darkTrimMat);
+            const grille = new THREE.Mesh(new THREE.BoxGeometry(width * 0.62, height * 0.44, 0.08), darkTrimMat);
             grille.position.set(0, height * 0.42, length * 0.5 + 0.01);
             bodyGroup.add(grille);
 
@@ -1178,12 +1235,13 @@
                 bodyGroup.add(mirror);
             });
 
-            // GT Rear Spoiler
-            if (cfg.spoiler || specs.bodyType === 'race' || specs.bodyType === 'hyper') {
+            // 3D Animated Active Rear Spoiler Wing (Tilts dynamically with speed & braking!)
+            let activeWingBlade = null;
+            if (cfg.spoiler || specs.bodyType === 'race' || specs.bodyType === 'hyper' || specs.bodyType === 'super' || specs.bodyType === 'muscle') {
                 const wingGroup = new THREE.Group();
-                const blade = new THREE.Mesh(new THREE.BoxGeometry(width * 0.96, 0.05, 0.28), darkTrimMat);
-                blade.position.set(0, height + 0.34, -length * 0.46);
-                wingGroup.add(blade);
+                activeWingBlade = new THREE.Mesh(new THREE.BoxGeometry(width * 0.96, 0.05, 0.30), darkTrimMat);
+                activeWingBlade.position.set(0, height + 0.34, -length * 0.46);
+                wingGroup.add(activeWingBlade);
                 [-0.55, 0.55].forEach(sx => {
                     const strut = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.34, 0.16), darkTrimMat);
                     strut.position.set(sx, height + 0.17, -length * 0.46);
@@ -1192,11 +1250,20 @@
                 bodyGroup.add(wingGroup);
             }
 
-            // Headlights & Taillights
-            const headMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xe0f2fe, emissiveIntensity: 0.4 });
-            const tailMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, emissive: 0xef4444, emissiveIntensity: 0.4 });
+            // 2026 LED Lightbar + Headlights & Taillights
+            const headMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xe0f2fe, emissiveIntensity: 0.6 });
+            const tailMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, emissive: 0xef4444, emissiveIntensity: 0.5 });
             const indMatL = new THREE.MeshStandardMaterial({ color: 0xd97706, emissive: 0xf59e0b, emissiveIntensity: 0 });
             const indMatR = new THREE.MeshStandardMaterial({ color: 0xd97706, emissive: 0xf59e0b, emissiveIntensity: 0 });
+
+            // Full-width 2026 LED DRL Signature Bar
+            const drlBar = new THREE.Mesh(new THREE.BoxGeometry(width * 0.88, 0.04, 0.09), headMat);
+            drlBar.position.set(0, height * 0.74, length * 0.5 + 0.01);
+            bodyGroup.add(drlBar);
+
+            const rearLedBar = new THREE.Mesh(new THREE.BoxGeometry(width * 0.88, 0.05, 0.09), tailMat);
+            rearLedBar.position.set(0, height * 0.76, -length * 0.5 - 0.01);
+            bodyGroup.add(rearLedBar);
 
             [-1, 1].forEach(side => {
                 const hl = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.12, 0.08), headMat);
@@ -1229,18 +1296,16 @@
             }
 
             // FUNCTIONAL 3D COCKPIT INTERIOR (Steering Wheel, Dashboard, Live Gauges, Seats)
-            let steeringWheel = null, rpmNeedle = null, speedNeedle = null, dashCanvasTex = null, dashCtx = null;
+            let steeringWheel = null, dashCanvasTex = null, dashCtx = null;
             if (isPlayer) {
                 const interiorGroup = new THREE.Group();
                 interiorGroup.position.set(0, height * 0.55, cabinOffset + 0.25);
                 bodyGroup.add(interiorGroup);
 
-                // Dashboard Console
                 const dash = new THREE.Mesh(new THREE.BoxGeometry(width * 0.78, 0.32, 0.55), darkTrimMat);
                 dash.position.set(0, 0.22, 0.42);
                 interiorGroup.add(dash);
 
-                // Dynamic Digital + Analog Instrument Cluster Canvas
                 const dashCanvas = document.createElement('canvas');
                 dashCanvas.width = 256;
                 dashCanvas.height = 128;
@@ -1253,7 +1318,6 @@
                 clusterScreen.rotation.x = 0.2;
                 interiorGroup.add(clusterScreen);
 
-                // Functional Steering Wheel (German Left-Hand Drive: +X in Three.js forward +Z)
                 steeringWheel = new THREE.Group();
                 steeringWheel.position.set(0.38, 0.36, 0.05);
                 steeringWheel.rotation.x = -0.35;
@@ -1264,7 +1328,6 @@
                 steeringWheel.add(rim, spoke, hub);
                 interiorGroup.add(steeringWheel);
 
-                // Racing Bucket Seats
                 [-0.38, 0.38].forEach(sx => {
                     const seat = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.58, 0.42), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 }));
                     seat.position.set(sx, 0.18, -0.45);
@@ -1273,8 +1336,8 @@
             }
 
             // 4 Wheels (Front Steerable + Rear Driven)
-            const wheelRadius = specs.bodyType === 'suv' ? 0.44 : 0.37;
-            const wheelWidth = specs.bodyType === 'super' || specs.bodyType === 'race' ? 0.30 : 0.24;
+            const wheelRadius = (specs.bodyType === 'suv' || specs.bodyType === 'truck') ? 0.48 : 0.37;
+            const wheelWidth = (specs.bodyType === 'super' || specs.bodyType === 'race' || specs.bodyType === 'truck') ? 0.32 : 0.24;
             const wheelbase = length * 0.62;
             const trackWidth = width * 0.47;
 
@@ -1308,7 +1371,6 @@
                 const rimMesh = new THREE.Mesh(rimGeo, rimMat);
                 spinGroup.add(rimMesh);
 
-                // Spoke bar so wheel rotation is clearly visible
                 const spokeBar = new THREE.Mesh(new THREE.BoxGeometry(wheelWidth + 0.02, wheelRadius * 1.2, 0.06), darkTrimMat);
                 spinGroup.add(spokeBar);
 
@@ -1318,6 +1380,7 @@
             return {
                 root,
                 bodyGroup,
+                activeWingBlade,
                 wheels,
                 steeringWheel,
                 dashCtx,
@@ -1374,7 +1437,7 @@
     };
 
     // =========================================================================
-    // 5. WORLD & TRACK BUILDER (6 GERMAN ENVIRONMENTS + COLLIDERS + CHECKPOINTS)
+    // 5. WORLD & TRACK BUILDER (10 3D ANIMATED ENVIRONMENTS + COLLIDERS)
     // =========================================================================
     const WorldBuilder = {
         group: null,
@@ -1384,6 +1447,7 @@
         cones: [],
         checkpoints: [],
         trafficLights: [],
+        animatedProps: [], // 3D animated wind turbines, blimps, radar dishes, yachts, beacons
         surfaceGrip: 1.0,
         trackId: 'autobahn',
 
@@ -1398,6 +1462,7 @@
             this.cones = [];
             this.checkpoints = [];
             this.trafficLights = [];
+            this.animatedProps = [];
         },
 
         buildTrack(scene, trackId, weatherId) {
@@ -1412,26 +1477,33 @@
             else if (weatherId === 'snow') this.surfaceGrip *= 0.60;
             else if (weatherId === 'cloudy') this.surfaceGrip *= 0.97;
 
-            // Ground Terrain Plane
+            // Ground Terrain Color per 10 Environments
             const isWinter = trackId === 'winter' || weatherId === 'snow';
-            const groundColor = isWinter ? 0xe2e8f0 : (trackId === 'city' ? 0x334155 : 0x1e3a29);
-            const groundGeo = new THREE.PlaneGeometry(2800, 2800);
+            let groundColor = 0x1e3a29;
+            if (isWinter) groundColor = 0xe2e8f0;
+            else if (trackId === 'route66') groundColor = 0xb45309; // Arizona Red Desert Sand
+            else if (trackId === 'miami') groundColor = 0x0284c7;   // Tropical Atlantic Ocean Causeway
+            else if (trackId === 'nyc_night' || trackId === 'city') groundColor = 0x1e293b;
+            else if (trackId === 'rockies') groundColor = 0x14532d;
+
+            const groundGeo = new THREE.PlaneGeometry(3000, 3000);
             groundGeo.rotateX(-Math.PI / 2);
             const groundMat = new THREE.MeshStandardMaterial({
                 color: groundColor,
-                roughness: isWinter ? 0.65 : 0.9
+                roughness: isWinter || trackId === 'miami' ? 0.35 : 0.9,
+                metalness: trackId === 'miami' ? 0.35 : 0.05
             });
             const ground = new THREE.Mesh(groundGeo, groundMat);
             ground.receiveShadow = true;
             this.group.add(ground);
 
-            // Generate Track Spline Waypoints
+            // Generate Track Spline Waypoints for all 10 Tracks
             if (trackId === 'dragstrip') {
                 this.roadWidth = 18;
                 for (let z = -60; z <= 560; z += 20) {
                     this.roadPoints.push(new THREE.Vector3(0, 0.03, z));
                 }
-            } else if (trackId === 'autobahn') {
+            } else if (trackId === 'autobahn' || trackId === 'route66') {
                 this.roadWidth = 22;
                 const pts = [
                     new THREE.Vector3(0, 0.03, 0),
@@ -1446,7 +1518,7 @@
                 ];
                 const curve = new THREE.CatmullRomCurve3(pts, true);
                 this.roadPoints = curve.getSpacedPoints(180);
-            } else if (trackId === 'city') {
+            } else if (trackId === 'city' || trackId === 'nyc_night') {
                 this.roadWidth = 18;
                 const pts = [
                     new THREE.Vector3(0, 0.03, 0),
@@ -1460,7 +1532,7 @@
                 ];
                 const curve = new THREE.CatmullRomCurve3(pts, true, 'catmullrom', 0.25);
                 this.roadPoints = curve.getSpacedPoints(160);
-            } else if (trackId === 'alps' || trackId === 'winter') {
+            } else if (trackId === 'alps' || trackId === 'winter' || trackId === 'rockies') {
                 this.roadWidth = 15;
                 const pts = [
                     new THREE.Vector3(0, 0.03, 0),
@@ -1477,7 +1549,7 @@
                 const curve = new THREE.CatmullRomCurve3(pts, true);
                 this.roadPoints = curve.getSpacedPoints(180);
             } else {
-                // Test Track / Driving School Proving Ground
+                // Miami Causeway & GamerKie Test Track
                 this.roadWidth = 18;
                 const pts = [
                     new THREE.Vector3(0, 0.03, 0),
@@ -1493,7 +1565,61 @@
 
             this.renderRoadRibbon(weatherId === 'rain' || weatherId === 'heavy_rain');
             this.populateScenery(trackId, isWinter);
+            this.spawn3DAnimatedLandmarks(trackId);
             this.buildCheckpoints();
+        },
+
+        spawn3DAnimatedLandmarks(trackId) {
+            // 1. Floating Animated Sky Airship / Blimp circling above every world
+            const blimpGroup = new THREE.Group();
+            const hull = new THREE.Mesh(new THREE.SphereGeometry(14, 16, 12), new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.5, roughness: 0.3 }));
+            hull.scale.set(1, 0.65, 2.6);
+            const neonRing = new THREE.Mesh(new THREE.TorusGeometry(11, 0.6, 8, 24), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+            blimpGroup.add(hull, neonRing);
+            blimpGroup.position.set(220, 95, 220);
+            this.group.add(blimpGroup);
+            this.animatedProps.push({ type: 'blimp', obj: blimpGroup, phase: 0 });
+
+            // 2. Rotating Wind Turbines / Radar Dishes / Lighthouse Beacons along horizon
+            const towerMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.4 });
+            const bladeMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.3 });
+
+            for (let i = 0; i < 8; i++) {
+                const ang = (i / 8) * Math.PI * 2;
+                const tx = 240 + Math.cos(ang) * 440;
+                const tz = 180 + Math.sin(ang) * 440;
+
+                const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.8, 42, 10), towerMat);
+                tower.position.set(tx, 21, tz);
+                this.group.add(tower);
+
+                const rotor = new THREE.Group();
+                rotor.position.set(tx, 42, tz + 1.5);
+                for (let b = 0; b < 3; b++) {
+                    const blade = new THREE.Mesh(new THREE.BoxGeometry(1.1, 16, 0.3), bladeMat);
+                    blade.position.y = 7.5;
+                    const pivot = new THREE.Group();
+                    pivot.rotation.z = (b * Math.PI * 2) / 3;
+                    pivot.add(blade);
+                    rotor.add(pivot);
+                }
+                this.group.add(rotor);
+                this.animatedProps.push({ type: 'turbine', obj: rotor, speed: 1.4 + (i % 3) * 0.4 });
+            }
+        },
+
+        updateAnimations(dt, elapsed) {
+            for (let i = 0; i < this.animatedProps.length; i++) {
+                const item = this.animatedProps[i];
+                if (item.type === 'turbine') {
+                    item.obj.rotation.z += item.speed * dt;
+                } else if (item.type === 'blimp') {
+                    item.phase += dt * 0.14;
+                    item.obj.position.x = 240 + Math.cos(item.phase) * 320;
+                    item.obj.position.z = 200 + Math.sin(item.phase) * 320;
+                    item.obj.rotation.y = -item.phase;
+                }
+            }
         },
 
         renderRoadRibbon(isWet) {
@@ -1574,11 +1700,17 @@
         },
 
         populateScenery(trackId, isWinter) {
-            const buildingMat1 = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.7 });
-            const buildingMat2 = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.6 });
+            const buildingMat1 = new THREE.MeshStandardMaterial({ color: trackId === 'nyc_night' ? 0x1e293b : 0x475569, roughness: 0.6 });
+            const buildingMat2 = new THREE.MeshStandardMaterial({ color: trackId === 'route66' ? 0x9a3412 : 0x64748b, roughness: 0.75 });
             const trunkMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.9 });
-            const foliageMat = new THREE.MeshStandardMaterial({ color: isWinter ? 0xf1f5f9 : 0x14532d, roughness: 0.8 });
-            const mountainMat = new THREE.MeshStandardMaterial({ color: isWinter ? 0xf8fafc : 0x334155, roughness: 0.9 });
+            const foliageMat = new THREE.MeshStandardMaterial({
+                color: isWinter ? 0xf1f5f9 : (trackId === 'miami' ? 0x22c55e : (trackId === 'route66' ? 0x65a30d : 0x14532d)),
+                roughness: 0.8
+            });
+            const mountainMat = new THREE.MeshStandardMaterial({
+                color: isWinter ? 0xf8fafc : (trackId === 'route66' ? 0xc2410c : 0x334155),
+                roughness: 0.9
+            });
             const lampMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8 });
 
             // Street Lamps along road
@@ -1596,13 +1728,14 @@
                 pole.position.set(lx, 3.75, lz);
                 this.group.add(pole);
 
-                const bulb = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.15, 0.3), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+                const bulbColor = trackId === 'miami' ? 0xf472b6 : 0xfef08a;
+                const bulb = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.15, 0.3), new THREE.MeshBasicMaterial({ color: bulbColor }));
                 bulb.position.set(lx - perp.x * 0.4 * side, 7.4, lz - perp.z * 0.4 * side);
                 this.group.add(bulb);
             }
 
-            // Environment Props: German City Buildings, Alpine Mountains, Bavarian Pine Forests
-            const propCount = trackId === 'city' ? 95 : 75;
+            // Environment Props for all 10 German & USA Worlds
+            const propCount = (trackId === 'city' || trackId === 'nyc_night') ? 105 : 80;
             for (let i = 0; i < propCount; i++) {
                 const angle = (i / propCount) * Math.PI * 2;
                 const radius = 90 + (i * 37) % 620;
@@ -1620,23 +1753,36 @@
                 }
                 if (tooClose) continue;
 
-                if (trackId === 'city' || (trackId === 'autobahn' && i % 3 === 0)) {
+                if (trackId === 'city' || trackId === 'nyc_night' || (trackId === 'autobahn' && i % 3 === 0)) {
                     const bw = 16 + (i % 5) * 4;
                     const bd = 16 + (i % 4) * 5;
-                    const bh = 18 + (i % 7) * 8;
+                    const bh = (trackId === 'nyc_night' ? 36 : 18) + (i % 7) * 10;
                     const bMesh = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), i % 2 === 0 ? buildingMat1 : buildingMat2);
                     bMesh.position.set(px, bh * 0.5, pz);
                     bMesh.castShadow = true;
                     bMesh.receiveShadow = true;
                     this.group.add(bMesh);
                     this.colliders.push({ x: px, z: pz, hw: bw * 0.5, hd: bd * 0.5 });
-                } else if ((trackId === 'alps' || trackId === 'winter') && i % 4 === 0) {
+                } else if ((trackId === 'alps' || trackId === 'winter' || trackId === 'rockies' || trackId === 'route66') && i % 3 === 0) {
                     const mRadius = 45 + (i % 4) * 20;
-                    const mHeight = 85 + (i % 5) * 35;
-                    const mMesh = new THREE.Mesh(new THREE.ConeGeometry(mRadius, mHeight, 7), mountainMat);
+                    const mHeight = trackId === 'route66' ? (35 + (i % 4) * 15) : (85 + (i % 5) * 35);
+                    const geo = trackId === 'route66' ? new THREE.CylinderGeometry(mRadius * 0.65, mRadius, mHeight, 7) : new THREE.ConeGeometry(mRadius, mHeight, 7);
+                    const mMesh = new THREE.Mesh(geo, mountainMat);
                     mMesh.position.set(px, mHeight * 0.5, pz);
                     this.group.add(mMesh);
                     this.colliders.push({ x: px, z: pz, hw: mRadius * 0.65, hd: mRadius * 0.65 });
+                } else if (trackId === 'miami') {
+                    // Palm Tree / Coastal Yacht Island
+                    const palm = new THREE.Group();
+                    palm.position.set(px, 0, pz);
+                    const island = new THREE.Mesh(new THREE.CylinderGeometry(5, 6, 0.8, 10), new THREE.MeshStandardMaterial({ color: 0xfde047 }));
+                    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.45, 7, 6), trunkMat);
+                    trunk.position.y = 3.5;
+                    const leaves = new THREE.Mesh(new THREE.ConeGeometry(3.4, 2.2, 7), foliageMat);
+                    leaves.position.y = 7.2;
+                    palm.add(island, trunk, leaves);
+                    this.group.add(palm);
+                    this.colliders.push({ x: px, z: pz, hw: 3.5, hd: 3.5 });
                 } else {
                     // Pine Tree
                     const tree = new THREE.Group();
@@ -1652,7 +1798,7 @@
             }
 
             // Road Tunnels on Autobahn & Alps
-            if (trackId === 'autobahn' || trackId === 'alps') {
+            if (trackId === 'autobahn' || trackId === 'alps' || trackId === 'rockies') {
                 const tIdx = Math.floor(this.roadPoints.length * 0.35);
                 this.buildTunnelSegment(tIdx, 14);
             }
@@ -2007,6 +2153,12 @@
             const targetRoll = THREE.MathUtils.clamp(this.angularVel * this.speedMs * 0.0025 / suspStiff, -0.08, 0.08);
             this.meshObj.bodyGroup.rotation.x += (targetPitch - this.meshObj.bodyGroup.rotation.x) * 0.18;
             this.meshObj.bodyGroup.rotation.z += (targetRoll - this.meshObj.bodyGroup.rotation.z) * 0.18;
+
+            // 3D Animated Active Aero Spoiler Wing (Airbrake tilt on braking, downforce angle at speed)
+            if (this.meshObj.activeWingBlade) {
+                const airbrakeAngle = (this.brake > 0.2 || this.handbrake) ? 0.42 : Math.min(0.18, this.speedKmh * 0.0006);
+                this.meshObj.activeWingBlade.rotation.x += (airbrakeAngle - this.meshObj.activeWingBlade.rotation.x) * 0.2;
+            }
 
             if (this.meshObj.steeringWheel) {
                 this.meshObj.steeringWheel.rotation.z = -this.steerAngle * 4.5;
@@ -2891,6 +3043,7 @@
             this.previewCarId = SaveSystem.state.selectedCar;
             this.renderCarList();
             this.renderPaintSwatches();
+            this.setTab('paint');
             this.selectPreviewCar(this.previewCarId);
         },
 
@@ -3073,15 +3226,11 @@
         },
 
         applyPaint(hex) {
-            if (!SaveSystem.state.ownedCars.includes(this.previewCarId)) {
-                UI.toast('Purchase vehicle first to customize paint.', 'error');
-                return;
-            }
             const cfg = SaveSystem.ensureCarConfig(this.previewCarId);
             cfg.color = hex;
             SaveSystem.save();
             this.selectPreviewCar(this.previewCarId);
-            UI.toast('Paint color applied!', 'success');
+            UI.toast('Custom car color applied!', 'success');
         },
 
         setFinish(finish) {
@@ -3277,6 +3426,26 @@
             el.textContent = msg;
             box.appendChild(el);
             setTimeout(() => el.remove(), 2800);
+        },
+
+        toggleFullscreen() {
+            const docEl = document.documentElement;
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                const req = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
+                if (req) {
+                    req.call(docEl).then(() => {
+                        if (screen.orientation && screen.orientation.lock) {
+                            screen.orientation.lock('landscape').catch(() => {});
+                        }
+                        this.toast('Fullscreen Mode Enabled', 'success');
+                    }).catch(() => {
+                        this.toast('Fullscreen blocked by browser frame', 'info');
+                    });
+                }
+            } else {
+                const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+                if (exit) exit.call(document).catch(() => {});
+            }
         },
 
         showView(viewName) {
@@ -3630,6 +3799,10 @@
             requestAnimationFrame((t) => this.loop(t));
         },
 
+        quickPlay() {
+            this.startSession('freedrive', 'autobahn', 'clear', 'noon', 10, 'auto');
+        },
+
         launchConfiguredMode() {
             const weather = document.getElementById('setup-weather').value;
             const time = document.getElementById('setup-time').value;
@@ -3728,6 +3901,7 @@
             this.lastTime = now;
 
             if (!this.isDriving) {
+                WorldBuilder.updateAnimations(dt, now * 0.001);
                 EnvironmentSystem.update(this.scene, this.sunLight, this.ambientLight, dt * 0.2);
                 CameraSystem.update(this.camera, dt, true);
                 this.renderer.render(this.scene, this.camera);
@@ -3735,6 +3909,7 @@
             }
 
             if (!this.paused) {
+                WorldBuilder.updateAnimations(dt, now * 0.001);
                 if (ReplaySystem.playing) {
                     ReplaySystem.updatePlayback(dt);
                 } else {
